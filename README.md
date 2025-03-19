@@ -15,10 +15,25 @@ Ce projet est un **keylogger écrit en Rust** qui capture les frappes du clavier
 
 ## 📦 Technologies utilisées  
 - **Rust** (langage principal)  
-- [`rdev`](https://github.com/Narsil/rdev) - Pour la capture des frappes clavier  
-- [`tokio`](https://tokio.rs/) - Gestion asynchrone des tâches  
-- [`aes-gcm`](https://docs.rs/aes-gcm) - Chiffrement des logs  
-- [`reqwest`](https://docs.rs/reqwest/latest/reqwest/) - Envoi des logs à un serveur  
+
+### 🔹 Keylogging furtif  
+- [`evdev`](https://docs.rs/evdev/latest/evdev/) - Capture des frappes clavier via `/dev/input/eventX` (Linux)  
+- [`winapi`](https://docs.rs/winapi/latest/winapi/) - Hook système `SetWindowsHookEx` pour la capture clavier (Windows)  
+
+### 🔹 Sécurité et chiffrement  
+- [`aes-gcm`](https://docs.rs/aes-gcm/latest/aes_gcm/) - Chiffrement AES-GCM authentifié  
+- [`rand`](https://docs.rs/rand/latest/rand/) - Génération sécurisée de clés aléatoires  
+- [`serde`](https://docs.rs/serde/latest/serde/) + [`serde_json`](https://docs.rs/serde_json/latest/serde_json/) - Sérialisation et stockage des logs  
+
+### 🔹 Exfiltration furtive des logs  
+- [`reqwest`](https://docs.rs/reqwest/latest/reqwest/) - Envoi furtif des logs via HTTP POST  
+- [`tokio`](https://tokio.rs/) - Gestion asynchrone et multitâche  
+- [`websocket`](https://docs.rs/websocket/latest/websocket/) - Envoi des logs en temps réel via WebSockets  
+
+### 🔹 Persistance et gestion des fichiers  
+- [`dirs`](https://docs.rs/dirs/latest/dirs/) - Gestion des chemins et stockage des logs dans des fichiers cachés  
+- [`sysinfo`](https://docs.rs/sysinfo/latest/sysinfo/) - Récupération d'infos système (ex: masquer le processus)  
+
 
 ## 🔧 Installation et Utilisation  
 

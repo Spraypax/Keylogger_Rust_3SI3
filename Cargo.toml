@@ -11,6 +11,7 @@ winapi = { version = "0.3", features = ["winuser"] }  # Windows (SetWindowsHookE
 # Sécurité et chiffrement
 aes-gcm = "0.10.3"    # Chiffrement AES-GCM authentifié
 rand = "0.8"          # Génération de clés aléatoires
+zeroize = "1.6"	      # Effacement sécurié de la clé en mémoire
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

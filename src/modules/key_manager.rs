@@ -1,7 +1,7 @@
-use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
-use aes_gcm::aead::{Aead, AeadCore, OsRng};
-use pbkdf2::{pbkdf2_hmac};
-use rand::{Rng, rngs::StdRng, SeedableRng};
+use aes_gcm::{Aes256Gcm, Key, KeyInit};
+use aes_gcm::aead::{Aead, OsRng};
+use aes_gcm::aead::rand_core::RngCore;
+use pbkdf2::pbkdf2_hmac;
 use sha2::Sha256;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
@@ -11,16 +11,18 @@ use zeroize::Zeroize;
 const KEY_FILE: &str = "key.bin";
 const SALT_SIZE: usize = 16;  // Taille du sel pour PBKDF2
 const NONCE_SIZE: usize = 12; // Taille du nonce pour AES-GCM
-const PBKDF2_ITERATIONS: u32 = 100_000; // Nombre d'itérations PBKDF2
+const PBKDF2_ITERATIONS: u32 = 100_000;
 
 /// Génère une nouvelle clé AES-256
 fn generate_key() -> Key<Aes256Gcm> {
-    Key::<Aes256Gcm>::generate(&mut OsRng)
+    let mut key_bytes = [0u8; 32];
+    OsRng.fill_bytes(&mut key_bytes);
+    Key::<Aes256Gcm>::from_slice(&key_bytes).clone()
 }
 
 /// Dérive une clé AES-256 à partir d'une passphrase
 fn derive_key_from_passphrase(passphrase: &str, salt: &[u8]) -> Key<Aes256Gcm> {
-    let mut key_bytes = [0u8; 32]; // Clé AES-256 = 32 octets
+    let mut key_bytes = [0u8; 32];
     pbkdf2_hmac::<Sha256>(
         passphrase.as_bytes(),
         salt,
@@ -32,12 +34,15 @@ fn derive_key_from_passphrase(passphrase: &str, salt: &[u8]) -> Key<Aes256Gcm> {
 
 /// Chiffre la clé AES-256 avec la passphrase et la stocke dans key.bin
 fn encrypt_and_save_key(key: &Key<Aes256Gcm>, passphrase: &str) -> std::io::Result<()> {
-    let salt: [u8; SALT_SIZE] = rand::thread_rng().gen(); // Génère un sel aléatoire
+    let mut salt = [0u8; SALT_SIZE];
+    let mut nonce = [0u8; NONCE_SIZE];
+    OsRng.fill_bytes(&mut salt);
+    OsRng.fill_bytes(&mut nonce);
+
     let derived_key = derive_key_from_passphrase(passphrase, &salt);
     let cipher = Aes256Gcm::new(&derived_key);
-    let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
 
-    let encrypted_key = cipher.encrypt(&nonce, key.as_slice()).expect("Chiffrement échoué");
+    let encrypted_key = cipher.encrypt(&nonce.into(), key.as_slice()).expect("Chiffrement échoué");
 
     let mut file = OpenOptions::new()
         .write(true)
@@ -45,10 +50,10 @@ fn encrypt_and_save_key(key: &Key<Aes256Gcm>, passphrase: &str) -> std::io::Resu
         .truncate(true)
         .open(KEY_FILE)?;
     
-    file.write_all(&salt)?; // Sauvegarde le sel
-    file.write_all(&nonce)?; // Sauvegarde le nonce
-    file.write_all(&encrypted_key)?; // Sauvegarde la clé chiffrée
-    file.sync_all()?;  
+    file.write_all(&salt)?;
+    file.write_all(&nonce)?;
+    file.write_all(&encrypted_key)?;
+    file.sync_all()?;
     Ok(())
 }
 
@@ -86,10 +91,9 @@ pub fn get_or_create_key(passphrase: &str) -> Key<Aes256Gcm> {
             }
         }
     } else {
-        println!(" Aucune clé trouvée, génération d'une nouvelle clé...");
+        println!("Aucune clé trouvée, génération d'une nouvelle clé...");
         let key = generate_key();
         encrypt_and_save_key(&key, passphrase).expect("Impossible de sauvegarder la clé !");
         key
     }
 }
-

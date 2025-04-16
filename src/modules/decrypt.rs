@@ -1,8 +1,9 @@
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
-use aes_gcm::aead::{Aead, AeadCore};
+use aes_gcm::aead::{Aead};
 use crate::modules::key_manager::get_or_create_key;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use hex;
 
 // Fonction pour déchiffrer un bloc AES-GCM
 fn decrypt_log(data: &[u8]) -> Option<String> {
@@ -11,7 +12,7 @@ fn decrypt_log(data: &[u8]) -> Option<String> {
     }
 
     let (nonce_bytes, encrypted_data) = data.split_at(12); // nonce = 12 octets
-    let key = get_or_create_key();
+    let key = get_or_create_key("passphrase"); // ⚠️ À adapter selon ton système de gestion de clé
     let cipher = Aes256Gcm::new(&key);
     let nonce = Nonce::from_slice(nonce_bytes);
 

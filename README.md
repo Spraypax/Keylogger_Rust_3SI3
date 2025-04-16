@@ -16,6 +16,8 @@ Ce projet est un **keylogger écrit en Rust** qui capture les frappes du clavier
 ## 📦 Technologies utilisées  
 - **Rust** (langage principal)  
 
+## 📂 Structure du projet
+
 ### 🔹 Keylogging furtif  
 - [`evdev`](https://docs.rs/evdev/latest/evdev/) - Capture des frappes clavier via `/dev/input/eventX` (Linux)  
 - [`winapi`](https://docs.rs/winapi/latest/winapi/) - Hook système `SetWindowsHookEx` pour la capture clavier (Windows)  

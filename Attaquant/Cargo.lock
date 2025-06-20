@@ -3,6 +3,31 @@
 version = 4
 
 [[package]]
+name = "Attacker-keylogger-rust"
+version = "0.1.0"
+dependencies = [
+ "aes-gcm",
+ "clap",
+ "colored",
+ "dirs",
+ "evdev",
+ "hex",
+ "inquire",
+ "pbkdf2",
+ "rand 0.8.5",
+ "rdev",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sysinfo",
+ "tokio",
+ "websocket",
+ "winapi 0.3.9",
+ "zeroize",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1164,31 +1189,6 @@ checksum = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 dependencies = [
  "winapi 0.2.8",
  "winapi-build",
-]
-
-[[package]]
-name = "keylogger-rust"
-version = "0.1.0"
-dependencies = [
- "aes-gcm",
- "clap",
- "colored",
- "dirs",
- "evdev",
- "hex",
- "inquire",
- "pbkdf2",
- "rand 0.8.5",
- "rdev",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "sysinfo",
- "tokio",
- "websocket",
- "winapi 0.3.9",
- "zeroize",
 ]
 
 [[package]]

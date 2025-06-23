@@ -6,7 +6,6 @@ use sha2::Sha256;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
-use zeroize::Zeroize;
 
 const KEY_FILE: &str = "key.bin";
 const SALT_SIZE: usize = 16;  // Taille du sel pour PBKDF2

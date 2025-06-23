@@ -74,15 +74,22 @@ fn main() {
                     }
 
                     "Supprimer les logs" => {
-                        let path = env::current_dir().unwrap().join("logs.enc");
+			    let log_path = env::current_dir().unwrap()
+				.join("src")
+				.join("Logs")
+				.join("log.log");
 
-                        if path.exists() {
-                            let _ = std::fs::remove_file(&path);
-                            println!("{}", "🧹 Logs supprimés !".green());
-                        } else {
-                            println!("{}", "❌ Aucun fichier de logs.".red());
-                        }
-                    }
+			    if log_path.exists() {
+				// Truncate (vider le contenu)
+				if let Err(e) = std::fs::File::create(&log_path) {
+				    eprintln!("❌ Erreur lors de la suppression : {}", e);
+				} else {
+				    println!("{}", "🧹 log.log vidé !".green());
+				}
+			    } else {
+				println!("{}", "❌ Aucun fichier log.log.".red());
+			    }
+			}
 
                     "Mode serveur C2" => {
                         let current_path = std::env::current_dir().unwrap();

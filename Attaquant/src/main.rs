@@ -71,22 +71,51 @@ fn main() {
                     }
 
                     "Supprimer les logs" => {
-			    let log_path = env::current_dir().unwrap()
-				.join("src")
-				.join("Logs")
-				.join("log.log");
+			    let log_options = vec!["log.log (local)", "logC2.log (C2)", "Annuler"];
+			    let log_choice = Select::new("🧹 Quel fichier log veux-tu vider ?", log_options)
+				.prompt();
 
-			    if log_path.exists() {
-				// Truncate (vider le contenu)
-				if let Err(e) = std::fs::File::create(&log_path) {
-				    eprintln!("❌ Erreur lors de la suppression : {}", e);
-				} else {
-				    println!("{}", "🧹 log.log vidé !".green());
+			    match log_choice {
+				Ok("log.log (local)") => {
+				    let log_path = env::current_dir().unwrap()
+					.join("src")
+					.join("Logs")
+					.join("log.log");
+
+				    if log_path.exists() {
+					if let Err(e) = std::fs::File::create(&log_path) {
+					    eprintln!("❌ Erreur lors de la suppression : {}", e);
+					} else {
+					    println!("{}", "🧹 log.log vidé !".green());
+					}
+				    } else {
+					println!("{}", "❌ Aucun fichier log.log.".red());
+				    }
 				}
-			    } else {
-				println!("{}", "❌ Aucun fichier log.log.".red());
+
+				Ok("logC2.log (C2)") => {
+				    let log_c2_path = env::current_dir().unwrap()
+					.join("src")
+					.join("Logs")
+					.join("logC2.log");
+
+				    if log_c2_path.exists() {
+					if let Err(e) = std::fs::File::create(&log_c2_path) {
+					    eprintln!("❌ Erreur lors de la suppression : {}", e);
+					} else {
+					    println!("{}", "🧹 logC2.log vidé !".green());
+					}
+				    } else {
+					println!("{}", "❌ Aucun fichier logC2.log.".red());
+				    }
+				}
+
+				_ => {
+				    println!("✅ Annulé.");
+				}
 			    }
 			}
+
 
                     "Mode serveur C2" => {
                         let binary_path = std::env::current_exe().unwrap();
